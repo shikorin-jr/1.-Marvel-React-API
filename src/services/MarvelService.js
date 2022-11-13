@@ -17,13 +17,26 @@ class MarvelService {
 
     // 4) Следующим этапом будем делать запросы к API
     // 5) Получаем всех персонажей
-    getAllCharacters = () => {
-        return this.getResource(`${this._apiBase}characters?limit=9&offset=210&${this._apiKey}`);
+    getAllCharacters = async () => {
+        const res = await this.getResource(`${this._apiBase}characters?limit=9&offset=210&${this._apiKey}`);
+        return res.data.results.map(this._transformCharacter);
     }
-    // 6) Получаем одного персонажа
-    getCharacter = (id) => {
-        return this.getResource(`${this._apiBase}characters/${id}?${this._apiKey}`);
-
+    // 6) Получаем одного персонажа.
+    getCharacter = async (id) => {
+        // 8) Сохр в промежуточный рез-т.
+        const res = await this.getResource(`${this._apiBase}characters/${id}?${this._apiKey}`);
+        return this._transformCharacter(res.data.results[0]);
+    }
+    // 7) Создаем метод(из RandomChar). В этом методе будем получать данные и возвр трансформир объект 
+    _transformCharacter = (char) => {
+        return {
+            // name: res.data.results[0].name,
+            name: char.name,
+            description: char.description,
+            thumbnail: char.thumbnail.path + '.' + char.thumbnail.extension,
+            homepage:  char.urls[0].url,
+            wiki: char.urls[1].url
+        }   
     }
 }
 
