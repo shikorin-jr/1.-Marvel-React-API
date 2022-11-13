@@ -1,6 +1,8 @@
 import { Component } from 'react';
 import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
+import Spinner from '../spinner/Spinner';
+import ErrorMessage from '../errorMessage/errorMessage';
 import MarvelService from '../../services/MarvelService';
 
 // Внутри компонента будет состояние. Когда будем делать запрос, эти данные будем там сохранять.
@@ -23,7 +25,11 @@ class RandomChar extends Component {
         // thumbnail: null,
         // homepage: null,
         // wiki: null
-        char: {}
+        char: {},
+        // 19) Св-во, ктр будет отвечать - идет загрузка или нет
+        // Когда идет загрузка true
+        loading: true,
+        error: false
     }
     // 14) В state могут быть и другие данные, не только про персонажа(ошибка, индикатор загрузки)
     // 15) Поэтому закоментированные в state данные, засунем в отдельный объект ктр будет характиризовать нашего персонажа
@@ -33,9 +39,20 @@ class RandomChar extends Component {
     // 4) Создаем новое св-во.
     marvelService = new MarvelService();
 
-    // 16) Создаем метод onChatLoaded(Наш персонаж загрузился). Если он загрузился
-    onChatLoaded = (char) => {
-        this.setState({char})
+    // 16) Создаем метод onCharLoaded(Наш персонаж загрузился). Если он загрузился
+    onCharLoaded = (char) => {
+        this.setState({
+            char, 
+            // Когда закончилась загрузка false
+            loading: false
+        })
+    }
+    // 21) Созд метод onError. Эта ошибка может произойти, когда у нас ошибка внутри запроса. Необходим catch
+    onError = () => {
+        this.setState({
+            loading: false,
+            error: true
+        })
     }
 
     // 5) Созд метод ктр будет обращаться к серверу, получать данные и записывать в state.
@@ -60,7 +77,8 @@ class RandomChar extends Component {
             // 12) В таком виде эти операции нам необходимо копировать в каждый компонент по получ персонажа
             // 13) Используем сервис MarvelService.js. Перенесем закоментированный объект код туда
             // 17) Модиф. пункт 16
-            .then(this.onChatLoaded)
+            .then(this.onCharLoaded)
+            .catch(this.onError)
     }
 
 
@@ -68,24 +86,23 @@ class RandomChar extends Component {
         // 2) Используем state внутри метода render
         // const {name, description, thumbnail, homepage, wiki} = this.state;
         // 18) Деструктризация
-        const {char: {name, description, thumbnail, homepage, wiki}} = this.state;
+        // const {char: {name, description, thumbnail, homepage, wiki}, loading} = this.state;
+        const {char, loading, error} = this.state;
+
+        // if (loading) {
+        //     return <Spinner/>
+        // }
+
+        const errorMessage = error ? <ErrorMessage/> : null;
+        const spinner = loading ? <Spinner/> :null;
+        const content = !(loading || error) ? <View char={char} /> : null;
+
         return (
             <div className="randomchar">
-                <div className="randomchar__block">
-                    <img src={thumbnail} alt="Random character" className="randomchar__img"/>
-                    <div className="randomchar__info">
-                        <p className="randomchar__name">{name}</p>
-                        <p className="randomchar__descr">{description}</p>
-                        <div className="randomchar__btns">
-                            <a href={homepage} className="button button__main">
-                                <div className="inner">homepage</div>
-                            </a>
-                            <a href={wiki} className="button button__secondary">
-                                <div className="inner">Wiki</div>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                {/* {loading ? <Spinner/> : <View char={char} />} */}
+                {errorMessage}
+                {spinner}
+                {content}
                 <div className="randomchar__static">
                     <p className="randomchar__title">
                         Random character for today!<br/>
@@ -102,6 +119,29 @@ class RandomChar extends Component {
             </div>
         )
     }
+}
+
+// 20) Этот компонент будет отображать кусочек верстки
+const View = ({char}) => {
+    const {name, description, thumbnail, homepage, wiki} = char;
+    return (
+        <div className="randomchar__block">
+            <img src={thumbnail} alt="Random character" className="randomchar__img"/>
+            <div className="randomchar__info">
+                <p className="randomchar__name">{name}</p>
+                <p className="randomchar__descr">{description}</p>
+                <div className="randomchar__btns">
+                    <a href={homepage} className="button button__main">
+                        <div className="inner">homepage</div>
+                    </a>
+                    <a href={wiki} className="button button__secondary">
+                        <div className="inner">Wiki</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    )
+        
 }
 
 export default RandomChar;
